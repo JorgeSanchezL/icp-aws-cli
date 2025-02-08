@@ -1,40 +1,26 @@
 package dynamodb
 
 import (
-	"context"
-	"fmt"
+	"icp-aws-cli/cmd/icp-aws-cli/dynamodb/commands"
 
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/spf13/cobra"
 )
 
 func InitCommands(dynamodbClient *dynamodb.Client) *cobra.Command {
-	var dynamodbCmd = &cobra.Command{
+	dynamodbCmd := &cobra.Command{
 		Use:   "dynamodb",
 		Short: "Commands to interact with Amazon DynamoDB",
 		Long:  "Allows listing and managing tables in Amazon DynamoDB.",
 	}
 
-	var listTablesCmd = &cobra.Command{
-		Use:   "list",
-		Short: "Lists DynamoDB tables",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return listTables(dynamodbClient)
-		},
-	}
+	// Initialize subcommands
+	commands.InitCreateCommands(dynamodbClient, dynamodbCmd)
+	commands.InitDeleteCommands(dynamodbClient, dynamodbCmd)
+	commands.InitDescribeCommands(dynamodbClient, dynamodbCmd)
+	commands.InitItemCommands(dynamodbClient, dynamodbCmd)
+	commands.InitListCommands(dynamodbClient, dynamodbCmd)
+	commands.InitQueryCommands(dynamodbClient, dynamodbCmd)
 
-	dynamodbCmd.AddCommand(listTablesCmd)
 	return dynamodbCmd
-}
-
-func listTables(dynamodbClient *dynamodb.Client) error {
-	result, err := dynamodbClient.ListTables(context.TODO(), &dynamodb.ListTablesInput{})
-	if err != nil {
-		return fmt.Errorf("error listing DynamoDB tables: %w", err)
-	}
-
-	for _, tableName := range result.TableNames {
-		fmt.Println(tableName)
-	}
-	return nil
 }
