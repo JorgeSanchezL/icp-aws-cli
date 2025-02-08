@@ -8,6 +8,7 @@ import (
 	"icp-aws-cli/cmd/icp-aws-cli/rds"
 	"icp-aws-cli/cmd/icp-aws-cli/s3"
 	"icp-aws-cli/pkg/awsclient"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -28,5 +29,8 @@ func InitCommands(clients *awsclient.AWSClientCollection) {
 }
 
 func Execute() {
-	cobra.CheckErr(RootCmd.Execute())
+	// cobra.CheckErr(RootCmd.Execute()) Removed as it prints the error message again before exiting
+	if err := RootCmd.Execute(); err != nil {
+		os.Exit(1)
+	}
 }
