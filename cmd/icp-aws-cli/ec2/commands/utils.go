@@ -1,50 +1,52 @@
 package commands
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 )
 
-func getInstanceIDsByPattern(ec2Client *ec2.Client, pattern string) ([]string, error) {
-	result, err := ec2Client.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput{})
-	if err != nil {
-		return nil, fmt.Errorf("error describing instances: %w", err)
-	}
+type ActionFunc func(*ec2.Client, context.Context, interface{}) (interface{}, error)
+type InputBuilderFunc func([]string) interface{}
 
-	var instanceIDs []string
-	for _, reservation := range result.Reservations {
-		for _, instance := range reservation.Instances {
-			if strings.Contains(*instance.InstanceId, pattern) {
-				instanceIDs = append(instanceIDs, *instance.InstanceId)
-			}
-		}
-	}
-	return instanceIDs, nil
-}
-
-func getInstanceIDsByTag(ec2Client *ec2.Client, key, value string) ([]string, error) {
+func manageInstancesWithFilters(ec2Client *ec2.Client, filters []types.Filter, buildInput InputBuilderFunc, actionFunc ActionFunc) error {
 	result, err := ec2Client.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput{
-		Filters: []types.Filter{
-			{
-				Name:   aws.String(fmt.Sprintf("tag:%s", key)),
-				Values: []string{value},
-			},
-		},
+		Filters: filters,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error describing instances by tag: %w", err)
+		return fmt.Errorf("error describing instances: %w", err)
 	}
 
-	var instanceIDs []string
+	instanceIDs := []string{}
 	for _, reservation := range result.Reservations {
 		for _, instance := range reservation.Instances {
 			instanceIDs = append(instanceIDs, *instance.InstanceId)
 		}
 	}
-	return instanceIDs, nil
+
+	if len(instanceIDs) == 0 {
+		return fmt.Errorf("no instances found with the specified filters")
+	}
+
+	input := buildInput(instanceIDs)
+	_, err = actionFunc(ec2Client, context.TODO(), input)
+	if err != nil {
+		return fmt.Errorf("error managing instances: %w", err)
+	}
+
+	fmt.Printf("Instances %v managed successfully\n", instanceIDs)
+	return nil
+}
+
+func confirmAction() bool {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Are you sure you want to perform this action on all instances? (yes/no): ")
+	response, _ := reader.ReadString('\n')
+	response = strings.TrimSpace(response)
+	return strings.ToLower(response) == "yes"
 }

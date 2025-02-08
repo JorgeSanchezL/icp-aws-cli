@@ -4,88 +4,96 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/spf13/cobra"
 )
 
 func InitStartCommands(ec2Client *ec2.Client, ec2Cmd *cobra.Command) {
+	var instanceID string
 	var pattern string
 	var tagKey string
 	var tagValue string
-
-	var startInstanceCmd = &cobra.Command{
-		Use:   "start [instance-id]",
-		Short: "Starts an EC2 instance",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return startInstance(ec2Client, args[0])
-		},
-	}
+	var allInstances bool
 
 	var startInstancesCmd = &cobra.Command{
 		Use:   "start",
 		Short: "Starts EC2 instances",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if pattern != "" {
-				return startInstancesByPattern(ec2Client, pattern)
-			} else if tagKey != "" && tagValue != "" {
-				return startInstancesByTag(ec2Client, tagKey, tagValue)
-			} else {
-				return fmt.Errorf("either pattern or tag key and value must be specified")
+			if allInstances && (instanceID != "" || pattern != "" || tagKey != "" || tagValue != "") {
+				return fmt.Errorf("the --all flag cannot be combined with other filters")
 			}
+
+			if allInstances {
+				if !confirmAction() {
+					return fmt.Errorf("action cancelled by user")
+				}
+				return manageInstancesWithFilters(ec2Client, []types.Filter{}, buildStartInstancesInput, startInstances)
+			}
+
+			if instanceID != "" && (pattern != "" || tagKey != "" || tagValue != "") {
+				return fmt.Errorf("instance ID cannot be combined with other filters")
+			}
+
+			if instanceID != "" {
+				return startInstancesByID(ec2Client, instanceID)
+			}
+
+			filters := []types.Filter{}
+
+			if pattern != "" {
+				filters = append(filters, types.Filter{
+					Name:   aws.String("tag:Name"),
+					Values: []string{pattern},
+				})
+			}
+
+			if tagKey != "" {
+				if tagValue == "" {
+					return fmt.Errorf("tag value must be specified when tag key is provided")
+				}
+				filters = append(filters, types.Filter{
+					Name:   aws.String(fmt.Sprintf("tag:%s", tagKey)),
+					Values: []string{tagValue},
+				})
+			}
+
+			if len(filters) == 0 {
+				return fmt.Errorf("at least one filter must be specified")
+			}
+
+			return manageInstancesWithFilters(ec2Client, filters, buildStartInstancesInput, startInstances)
 		},
 	}
 
+	startInstancesCmd.Flags().StringVarP(&instanceID, "instance-id", "i", "", "Instance ID to filter instances")
 	startInstancesCmd.Flags().StringVarP(&pattern, "pattern", "p", "", "Pattern to filter instances")
 	startInstancesCmd.Flags().StringVarP(&tagKey, "tag-key", "k", "", "Tag key to filter instances")
 	startInstancesCmd.Flags().StringVarP(&tagValue, "tag-value", "v", "", "Tag value to filter instances")
+	startInstancesCmd.Flags().BoolVarP(&allInstances, "all", "a", false, "Apply action to all instances")
 
-	ec2Cmd.AddCommand(startInstanceCmd)
 	ec2Cmd.AddCommand(startInstancesCmd)
 }
 
-func startInstance(ec2Client *ec2.Client, instanceID string) error {
+func startInstancesByID(ec2Client *ec2.Client, instanceID string) error {
 	_, err := ec2Client.StartInstances(context.TODO(), &ec2.StartInstancesInput{
 		InstanceIds: []string{instanceID},
 	})
 	if err != nil {
 		return fmt.Errorf("error starting instance %s: %w", instanceID, err)
 	}
-
 	fmt.Printf("Instance %s started successfully\n", instanceID)
 	return nil
 }
 
-func startInstancesByPattern(ec2Client *ec2.Client, pattern string) error {
-	instanceIDs, err := getInstanceIDsByPattern(ec2Client, pattern)
-	if err != nil {
-		return err
-	}
-
-	_, err = ec2Client.StartInstances(context.TODO(), &ec2.StartInstancesInput{
+func buildStartInstancesInput(instanceIDs []string) interface{} {
+	return &ec2.StartInstancesInput{
 		InstanceIds: instanceIDs,
-	})
-	if err != nil {
-		return fmt.Errorf("error starting instances: %w", err)
 	}
-
-	fmt.Printf("Instances %v started successfully\n", instanceIDs)
-	return nil
 }
 
-func startInstancesByTag(ec2Client *ec2.Client, key, value string) error {
-	instanceIDs, err := getInstanceIDsByTag(ec2Client, key, value)
-	if err != nil {
-		return err
-	}
-
-	_, err = ec2Client.StartInstances(context.TODO(), &ec2.StartInstancesInput{
-		InstanceIds: instanceIDs,
-	})
-	if err != nil {
-		return fmt.Errorf("error starting instances: %w", err)
-	}
-
-	fmt.Printf("Instances %v started successfully\n", instanceIDs)
-	return nil
+func startInstances(ec2Client *ec2.Client, ctx context.Context, input interface{}) (interface{}, error) {
+	ec2Input := input.(*ec2.StartInstancesInput)
+	return ec2Client.StartInstances(ctx, ec2Input)
 }
