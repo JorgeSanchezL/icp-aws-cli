@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
+	"icp-aws-cli/pkg/utils"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -26,7 +27,7 @@ func InitStartCommands(ec2Client *ec2.Client, ec2Cmd *cobra.Command) {
 			}
 
 			if allInstances {
-				if !confirmAction() {
+				if !utils.ConfirmAction() {
 					return fmt.Errorf("action cancelled by user")
 				}
 				return manageInstancesWithFilters(ec2Client, []types.Filter{}, buildStartInstancesInput, startInstances)
