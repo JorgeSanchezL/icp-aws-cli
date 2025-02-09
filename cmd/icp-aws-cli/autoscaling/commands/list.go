@@ -3,8 +3,8 @@ package commands
 import (
 	"context"
 	"fmt"
-	"regexp"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/spf13/cobra"
@@ -83,40 +83,35 @@ func listGroupsByName(asClient *autoscaling.Client, groupName string) error {
 }
 
 func listGroupsWithFilters(asClient *autoscaling.Client, pattern, tagKey, tagValue string) error {
-	result, err := asClient.DescribeAutoScalingGroups(context.TODO(), &autoscaling.DescribeAutoScalingGroupsInput{})
+	filters := []types.Filter{}
+
+	if pattern != "" {
+		filters = append(filters, types.Filter{
+			Name:   aws.String("tag:Name"),
+			Values: []string{pattern},
+		})
+	}
+
+	if tagKey != "" {
+		if tagValue == "" {
+			return fmt.Errorf("tag value must be specified when tag key is provided")
+		}
+		filters = append(filters, types.Filter{
+			Name:   aws.String(fmt.Sprintf("tag:%s", tagKey)),
+			Values: []string{tagValue},
+		})
+	}
+
+	input := &autoscaling.DescribeAutoScalingGroupsInput{
+		Filters: filters,
+	}
+
+	result, err := asClient.DescribeAutoScalingGroups(context.TODO(), input)
 	if err != nil {
 		return fmt.Errorf("could not list AutoScaling groups: %w", err)
 	}
 
-	var groups []types.AutoScalingGroup
-	if pattern != "" {
-		re, err := regexp.Compile(pattern)
-		if err != nil {
-			return fmt.Errorf("invalid pattern: %w", err)
-		}
-		for _, group := range result.AutoScalingGroups {
-			if re.MatchString(*group.AutoScalingGroupName) {
-				groups = append(groups, group)
-			}
-		}
-	} else {
-		groups = result.AutoScalingGroups
-	}
-
-	if tagKey != "" && tagValue != "" {
-		var filteredGroups []types.AutoScalingGroup
-		for _, group := range groups {
-			for _, tag := range group.Tags {
-				if *tag.Key == tagKey && *tag.Value == tagValue {
-					filteredGroups = append(filteredGroups, group)
-					break
-				}
-			}
-		}
-		groups = filteredGroups
-	}
-
-	for _, group := range groups {
+	for _, group := range result.AutoScalingGroups {
 		printGroup(group)
 	}
 
@@ -124,13 +119,5 @@ func listGroupsWithFilters(asClient *autoscaling.Client, pattern, tagKey, tagVal
 }
 
 func printGroup(group types.AutoScalingGroup) {
-	fmt.Printf("Group: %s\n", *group.AutoScalingGroupName)
-	fmt.Printf("Launch Configuration: %s\n", *group.LaunchConfigurationName)
-	fmt.Printf("Min Size: %d\n", group.MinSize)
-	fmt.Printf("Max Size: %d\n", group.MaxSize)
-	fmt.Printf("Desired Capacity: %d\n", group.DesiredCapacity)
-	fmt.Printf("Instances: %d\n", len(group.Instances))
-	for _, tag := range group.Tags {
-		fmt.Printf("  Tag: %s = %s\n", *tag.Key, *tag.Value)
-	}
+	fmt.Printf("Group: %s, Current number of instances: %d, MinSize: %d, MaxSize: %d, DesiredCapacity: %d\n", *group.AutoScalingGroupName, len(group.Instances), group.MinSize, group.MaxSize, group.DesiredCapacity)
 }

@@ -15,9 +15,8 @@ func InitCommands(asClient *autoscaling.Client) *cobra.Command {
 	}
 	// Initialize subcommands
 	commands.InitListGroupsCommand(asClient, autoscalingCmd)
-	commands.InitDescribeGroupCommand(asClient, autoscalingCmd)
 	commands.InitCreateGroupCommand(asClient, autoscalingCmd)
-	commands.InitDeleteGroupCommand(asClient, autoscalingCmd)
+	commands.InitDeleteGroupsCommand(asClient, autoscalingCmd)
 	commands.InitUpdateGroupCommand(asClient, autoscalingCmd)
 
 	return autoscalingCmd
