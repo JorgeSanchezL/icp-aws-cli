@@ -16,7 +16,7 @@ func InitUpdateGroupCommand(asClient *autoscaling.Client, autoscalingCmd *cobra.
 	var desiredCapacity int32
 
 	var updateGroupCmd = &cobra.Command{
-		Use:   "update-group",
+		Use:   "update",
 		Short: "Updates an AutoScaling group",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if groupName == "" {

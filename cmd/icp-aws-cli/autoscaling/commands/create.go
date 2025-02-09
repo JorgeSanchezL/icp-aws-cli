@@ -16,7 +16,7 @@ func InitCreateGroupCommand(asClient *autoscaling.Client, autoscalingCmd *cobra.
 	var tags []string
 
 	var createGroupCmd = &cobra.Command{
-		Use:   "create-group",
+		Use:   "create",
 		Short: "Creates an AutoScaling group",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return createGroup(asClient, groupName, launchConfigurationName, minSize, maxSize, desiredCapacity, tags)

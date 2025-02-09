@@ -18,7 +18,7 @@ func InitDeleteGroupsCommand(asClient *autoscaling.Client, autoscalingCmd *cobra
 	var allGroups bool
 
 	var deleteGroupsCmd = &cobra.Command{
-		Use:   "delete-groups",
+		Use:   "delete",
 		Short: "Deletes AutoScaling groups",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if allGroups && (groupName != "" || pattern != "" || tagKey != "" || tagValue != "") {

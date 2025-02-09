@@ -18,7 +18,7 @@ func InitListGroupsCommand(asClient *autoscaling.Client, autoscalingCmd *cobra.C
 	var allGroups bool
 
 	var listGroupsCmd = &cobra.Command{
-		Use:   "list-groups",
+		Use:   "list",
 		Short: "Lists AutoScaling groups",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if allGroups && (groupName != "" || pattern != "" || tagKey != "" || tagValue != "") {
