@@ -12,6 +12,7 @@ func InitCopyCommands(s3Client *s3.Client, s3Command *cobra.Command) {
 	copyObjectCmd := &cobra.Command{
 		Use:   "copyObject",
 		Short: "Copies an object from one bucket to another",
+		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return copyObject(s3Client, args[0], args[1], args[2], args[3])
 		},

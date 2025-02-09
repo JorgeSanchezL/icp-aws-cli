@@ -18,6 +18,7 @@ func InitCommands(s3Client *s3.Client) *cobra.Command {
 	commands.InitCopyCommands(s3Client, s3Cmd)
 	commands.InitDeleteCommands(s3Client, s3Cmd)
 	commands.InitListCommands(s3Client, s3Cmd)
+	commands.InitCreateCommands(s3Client, s3Cmd)
 
 	return s3Cmd
 }

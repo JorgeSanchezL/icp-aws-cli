@@ -21,6 +21,7 @@ func InitListCommands(s3Client *s3.Client, s3Command *cobra.Command) {
 	listObjectsCmd := &cobra.Command{
 		Use:   "listObjects",
 		Short: "Lists all objects of an S3 bucket",
+		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return listObjects(s3Client, args[0])
 		},
@@ -29,6 +30,7 @@ func InitListCommands(s3Client *s3.Client, s3Command *cobra.Command) {
 	listObjectsByExtensionCmd := &cobra.Command{
 		Use:   "listObjectsByExtension",
 		Short: "Lists all objects in a bucket with a specific file extension",
+		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return listObjectsByExtension(s3Client, args[0], args[1])
 		},
