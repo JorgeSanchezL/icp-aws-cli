@@ -12,6 +12,7 @@ import (
 
 func InitListMetricsCommand(cwClient *cloudwatch.Client, cloudWatchCmd *cobra.Command) {
 	var metricName string
+	var prefix string
 	var pattern string
 	var namespace string
 	var dimensionName string
@@ -22,7 +23,7 @@ func InitListMetricsCommand(cwClient *cloudwatch.Client, cloudWatchCmd *cobra.Co
 		Use:   "list-metrics",
 		Short: "Lists CloudWatch metrics",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if allMetrics && (metricName != "" || pattern != "" || namespace != "" || dimensionName != "" || dimensionValue != "") {
+			if allMetrics && (metricName != "" || prefix != "" || pattern != "" || namespace != "" || dimensionName != "" || dimensionValue != "") {
 				return fmt.Errorf("the --all flag cannot be combined with other filters")
 			}
 
@@ -30,7 +31,7 @@ func InitListMetricsCommand(cwClient *cloudwatch.Client, cloudWatchCmd *cobra.Co
 				return listAllMetrics(cwClient)
 			}
 
-			if metricName != "" && (pattern != "" || namespace != "" || dimensionName != "" || dimensionValue != "") {
+			if metricName != "" && (prefix != "" || pattern != "" || namespace != "" || dimensionName != "" || dimensionValue != "") {
 				return fmt.Errorf("metric name cannot be combined with other filters")
 			}
 
@@ -38,17 +39,18 @@ func InitListMetricsCommand(cwClient *cloudwatch.Client, cloudWatchCmd *cobra.Co
 				return listMetricsByName(cwClient, metricName)
 			}
 
-			if pattern == "" && namespace == "" && dimensionName == "" && dimensionValue == "" {
+			if prefix == "" && pattern == "" && namespace == "" && dimensionName == "" && dimensionValue == "" {
 				return fmt.Errorf("at least one filter must be specified")
 			}
 
-			return listMetricsWithFilters(cwClient, pattern, namespace, dimensionName, dimensionValue)
+			return listMetricsWithFilters(cwClient, prefix, pattern, namespace, dimensionName, dimensionValue)
 		},
 	}
 
-	listMetricsCmd.Flags().StringVarP(&metricName, "metric-name", "m", "", "Metric name to filter metrics")
+	listMetricsCmd.Flags().StringVarP(&metricName, "metric-name", "n", "", "Metric name to filter metrics")
+	listMetricsCmd.Flags().StringVarP(&prefix, "prefix", "x", "", "Prefix to filter metrics by name")
 	listMetricsCmd.Flags().StringVarP(&pattern, "pattern", "p", "", "Pattern to filter metrics by name")
-	listMetricsCmd.Flags().StringVarP(&namespace, "namespace", "n", "", "Namespace to filter metrics")
+	listMetricsCmd.Flags().StringVarP(&namespace, "namespace", "s", "", "Namespace to filter metrics")
 	listMetricsCmd.Flags().StringVarP(&dimensionName, "dimension-name", "d", "", "Dimension name to filter metrics")
 	listMetricsCmd.Flags().StringVarP(&dimensionValue, "dimension-value", "v", "", "Dimension value to filter metrics")
 	listMetricsCmd.Flags().BoolVarP(&allMetrics, "all", "a", false, "List all metrics")
@@ -84,7 +86,7 @@ func listMetricsByName(cwClient *cloudwatch.Client, metricName string) error {
 	return nil
 }
 
-func listMetricsWithFilters(cwClient *cloudwatch.Client, pattern, namespace, dimensionName, dimensionValue string) error {
+func listMetricsWithFilters(cwClient *cloudwatch.Client, prefix, pattern, namespace, dimensionName, dimensionValue string) error {
 	input := &cloudwatch.ListMetricsInput{}
 
 	if namespace != "" {
@@ -98,6 +100,10 @@ func listMetricsWithFilters(cwClient *cloudwatch.Client, pattern, namespace, dim
 				Value: &dimensionValue,
 			},
 		}
+	}
+
+	if prefix != "" {
+		input.MetricName = &prefix
 	}
 
 	result, err := cwClient.ListMetrics(context.TODO(), input)

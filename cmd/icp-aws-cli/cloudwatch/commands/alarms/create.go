@@ -24,9 +24,9 @@ func InitCreateAlarmCommand(cwClient *cloudwatch.Client, cloudWatchCmd *cobra.Co
 		},
 	}
 
-	createAlarmCmd.Flags().StringVarP(&alarmName, "alarm-name", "a", "", "Name of the alarm")
+	createAlarmCmd.Flags().StringVarP(&alarmName, "alarm-name", "n", "", "Name of the alarm")
 	createAlarmCmd.Flags().StringVarP(&metricName, "metric-name", "m", "", "Name of the metric")
-	createAlarmCmd.Flags().StringVarP(&namespace, "namespace", "n", "", "Namespace of the metric")
+	createAlarmCmd.Flags().StringVarP(&namespace, "namespace", "s", "", "Namespace of the metric")
 	createAlarmCmd.Flags().StringVarP(&comparisonOperator, "comparison-operator", "c", "", "Comparison operator for the alarm")
 	createAlarmCmd.Flags().Float64VarP(&threshold, "threshold", "t", 0, "Threshold for the alarm")
 	createAlarmCmd.Flags().Int32VarP(&evaluationPeriods, "evaluation-periods", "e", 1, "Number of evaluation periods")

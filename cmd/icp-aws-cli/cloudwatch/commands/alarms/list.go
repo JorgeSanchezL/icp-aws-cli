@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/spf13/cobra"
@@ -12,6 +13,7 @@ import (
 
 func InitListAlarmsCommand(cwClient *cloudwatch.Client, cloudWatchCmd *cobra.Command) {
 	var alarmName string
+	var prefix string
 	var pattern string
 	var tagKey string
 	var tagValue string
@@ -21,7 +23,7 @@ func InitListAlarmsCommand(cwClient *cloudwatch.Client, cloudWatchCmd *cobra.Com
 		Use:   "list-alarms",
 		Short: "Lists CloudWatch alarms",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if allAlarms && (alarmName != "" || pattern != "" || tagKey != "" || tagValue != "") {
+			if allAlarms && (alarmName != "" || prefix != "" || pattern != "" || tagKey != "" || tagValue != "") {
 				return fmt.Errorf("the --all flag cannot be combined with other filters")
 			}
 
@@ -29,7 +31,7 @@ func InitListAlarmsCommand(cwClient *cloudwatch.Client, cloudWatchCmd *cobra.Com
 				return listAllAlarms(cwClient)
 			}
 
-			if alarmName != "" && (pattern != "" || tagKey != "" || tagValue != "") {
+			if alarmName != "" && (prefix != "" || pattern != "" || tagKey != "" || tagValue != "") {
 				return fmt.Errorf("alarm name cannot be combined with other filters")
 			}
 
@@ -37,19 +39,20 @@ func InitListAlarmsCommand(cwClient *cloudwatch.Client, cloudWatchCmd *cobra.Com
 				return listAlarmsByName(cwClient, alarmName)
 			}
 
-			if pattern == "" && tagKey == "" && tagValue == "" {
+			if prefix == "" && pattern == "" && tagKey == "" && tagValue == "" {
 				return fmt.Errorf("at least one filter must be specified")
 			}
 
-			return listAlarmsWithFilters(cwClient, pattern, tagKey, tagValue)
+			return listAlarmsWithFilters(cwClient, prefix, pattern, tagKey, tagValue)
 		},
 	}
 
-	listAlarmsCmd.Flags().StringVarP(&alarmName, "alarm-name", "a", "", "Alarm name to filter alarms")
+	listAlarmsCmd.Flags().StringVarP(&alarmName, "alarm-name", "n", "", "Alarm name to filter alarms")
+	listAlarmsCmd.Flags().StringVarP(&prefix, "prefix", "x", "", "Prefix to filter alarms by name")
 	listAlarmsCmd.Flags().StringVarP(&pattern, "pattern", "p", "", "Pattern to filter alarms by name")
 	listAlarmsCmd.Flags().StringVarP(&tagKey, "tag-key", "k", "", "Tag key to filter alarms")
 	listAlarmsCmd.Flags().StringVarP(&tagValue, "tag-value", "v", "", "Tag value to filter alarms")
-	listAlarmsCmd.Flags().BoolVarP(&allAlarms, "all", "l", false, "List all alarms")
+	listAlarmsCmd.Flags().BoolVarP(&allAlarms, "all", "a", false, "List all alarms")
 
 	cloudWatchCmd.AddCommand(listAlarmsCmd)
 }
@@ -82,8 +85,14 @@ func listAlarmsByName(cwClient *cloudwatch.Client, alarmName string) error {
 	return nil
 }
 
-func listAlarmsWithFilters(cwClient *cloudwatch.Client, pattern, tagKey, tagValue string) error {
-	result, err := cwClient.DescribeAlarms(context.TODO(), &cloudwatch.DescribeAlarmsInput{})
+func listAlarmsWithFilters(cwClient *cloudwatch.Client, prefix, pattern, tagKey, tagValue string) error {
+	input := &cloudwatch.DescribeAlarmsInput{}
+
+	if prefix != "" {
+		input.AlarmNamePrefix = aws.String(prefix)
+	}
+
+	result, err := cwClient.DescribeAlarms(context.TODO(), input)
 	if err != nil {
 		return fmt.Errorf("could not list alarms: %w", err)
 	}
@@ -130,11 +139,5 @@ func listAlarmsWithFilters(cwClient *cloudwatch.Client, pattern, tagKey, tagValu
 }
 
 func printAlarm(alarm types.MetricAlarm) {
-	fmt.Printf("Alarm: %s\n", *alarm.AlarmName)
-	fmt.Printf("Metric: %s\n", *alarm.MetricName)
-	fmt.Printf("Namespace: %s\n", *alarm.Namespace)
-	fmt.Printf("State: %s\n", alarm.StateValue)
-	fmt.Printf("Threshold: %f\n", *alarm.Threshold)
-	fmt.Printf("Comparison Operator: %s\n", alarm.ComparisonOperator)
-	fmt.Printf("Evaluation Periods: %d\n", *alarm.EvaluationPeriods)
+	fmt.Printf("Alarm Name: %s, State: %s, Metric: %s, Threshold: %f\n", *alarm.AlarmName, alarm.StateValue, *alarm.MetricName, *alarm.Threshold)
 }

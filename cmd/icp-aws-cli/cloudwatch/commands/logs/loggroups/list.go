@@ -1,9 +1,10 @@
-package logs
+package loggroups
 
 import (
 	"context"
 	"fmt"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
@@ -45,7 +46,7 @@ func InitListLogGroupsCommand(cwClient *cloudwatchlogs.Client, cloudWatchCmd *co
 		},
 	}
 
-	listLogsCmd.Flags().StringVarP(&logGroupName, "log-group-name", "l", "", "Log group name to filter logs")
+	listLogsCmd.Flags().StringVarP(&logGroupName, "log-group-name", "n", "", "Log group name to filter logs")
 	listLogsCmd.Flags().StringVarP(&pattern, "pattern", "p", "", "Pattern to filter logs by name")
 	listLogsCmd.Flags().StringVarP(&tagKey, "tag-key", "k", "", "Tag key to filter logs")
 	listLogsCmd.Flags().StringVarP(&tagValue, "tag-value", "v", "", "Tag value to filter logs")
@@ -106,8 +107,8 @@ func listLogsWithFilters(cwClient *cloudwatchlogs.Client, pattern, tagKey, tagVa
 	if tagKey != "" && tagValue != "" {
 		var filteredLogGroups []types.LogGroup
 		for _, logGroup := range logGroups {
-			tags, err := cwClient.ListTagsLogGroup(context.TODO(), &cloudwatchlogs.ListTagsLogGroupInput{
-				LogGroupName: logGroup.LogGroupName,
+			tags, err := cwClient.ListTagsForResource(context.TODO(), &cloudwatchlogs.ListTagsForResourceInput{
+				ResourceArn: logGroup.Arn,
 			})
 			if err != nil {
 				return fmt.Errorf("could not list tags for log group %s: %w", *logGroup.LogGroupName, err)
@@ -130,8 +131,6 @@ func listLogsWithFilters(cwClient *cloudwatchlogs.Client, pattern, tagKey, tagVa
 }
 
 func printLogGroup(logGroup types.LogGroup) {
-	fmt.Printf("Log Group: %s\n", *logGroup.LogGroupName)
-	fmt.Printf("Creation Time: %d\n", logGroup.CreationTime)
-	fmt.Printf("Stored Bytes: %d\n", logGroup.StoredBytes)
-	fmt.Printf("Retention In Days: %d\n", logGroup.RetentionInDays)
+	creationTime := time.Unix(0, *logGroup.CreationTime*int64(time.Millisecond)).Format("2006-01-02 15:04:05")
+	fmt.Printf("Log Group Name: %s, Creation Time: %s\n", *logGroup.LogGroupName, creationTime)
 }
