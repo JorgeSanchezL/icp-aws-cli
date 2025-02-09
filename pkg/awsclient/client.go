@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
@@ -14,12 +15,13 @@ import (
 )
 
 type AWSClientCollection struct {
-	S3          *s3.Client
-	EC2         *ec2.Client
-	DynamoDB    *dynamodb.Client
-	AutoScaling *autoscaling.Client
-	RDS         *rds.Client
-	CloudWatch  *cloudwatch.Client
+	S3             *s3.Client
+	EC2            *ec2.Client
+	DynamoDB       *dynamodb.Client
+	AutoScaling    *autoscaling.Client
+	RDS            *rds.Client
+	CloudWatch     *cloudwatch.Client
+	CloudWatchLogs *cloudwatchlogs.Client
 }
 
 func NewAWSClientCollection() (*AWSClientCollection, error) {
@@ -29,11 +31,12 @@ func NewAWSClientCollection() (*AWSClientCollection, error) {
 	}
 
 	return &AWSClientCollection{
-		S3:          s3.NewFromConfig(cfg),
-		EC2:         ec2.NewFromConfig(cfg),
-		DynamoDB:    dynamodb.NewFromConfig(cfg),
-		AutoScaling: autoscaling.NewFromConfig(cfg),
-		RDS:         rds.NewFromConfig(cfg),
-		CloudWatch:  cloudwatch.NewFromConfig(cfg),
+		S3:             s3.NewFromConfig(cfg),
+		EC2:            ec2.NewFromConfig(cfg),
+		DynamoDB:       dynamodb.NewFromConfig(cfg),
+		AutoScaling:    autoscaling.NewFromConfig(cfg),
+		RDS:            rds.NewFromConfig(cfg),
+		CloudWatch:     cloudwatch.NewFromConfig(cfg),
+		CloudWatchLogs: cloudwatchlogs.NewFromConfig(cfg),
 	}, nil
 }

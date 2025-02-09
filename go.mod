@@ -25,7 +25,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.51.10
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.43.12
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.40.0
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.45.12
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.39.8
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.202.2
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.12 // indirect

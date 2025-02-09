@@ -1,11 +1,8 @@
 package commands
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"os"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -41,12 +38,4 @@ func manageInstancesWithFilters(ec2Client *ec2.Client, filters []types.Filter, b
 
 	fmt.Printf("Instances %v managed successfully\n", instanceIDs)
 	return nil
-}
-
-func confirmAction() bool {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Are you sure you want to perform this action on all instances? (yes/no): ")
-	response, _ := reader.ReadString('\n')
-	response = strings.TrimSpace(response)
-	return strings.ToLower(response) == "yes"
 }

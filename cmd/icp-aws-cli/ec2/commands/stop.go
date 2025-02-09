@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
+	"icp-aws-cli/pkg/utils"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -16,17 +17,18 @@ func InitStopCommands(ec2Client *ec2.Client, ec2Cmd *cobra.Command) {
 	var tagKey string
 	var tagValue string
 	var allInstances bool
+	var state string
 
 	var stopInstancesCmd = &cobra.Command{
 		Use:   "stop",
 		Short: "Stops EC2 instances",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if allInstances && (instanceID != "" || pattern != "" || tagKey != "" || tagValue != "") {
+			if allInstances && (instanceID != "" || pattern != "" || tagKey != "" || tagValue != "" || state != "") {
 				return fmt.Errorf("the --all flag cannot be combined with other filters")
 			}
 
 			if allInstances {
-				if !confirmAction() {
+				if !utils.ConfirmAction() {
 					return fmt.Errorf("action cancelled by user")
 				}
 				return manageInstancesWithFilters(ec2Client, []types.Filter{}, buildStopInstancesInput, stopInstances)
@@ -56,6 +58,13 @@ func InitStopCommands(ec2Client *ec2.Client, ec2Cmd *cobra.Command) {
 				filters = append(filters, types.Filter{
 					Name:   aws.String(fmt.Sprintf("tag:%s", tagKey)),
 					Values: []string{tagValue},
+				})
+			}
+
+			if state != "" {
+				filters = append(filters, types.Filter{
+					Name:   aws.String("instance-state-name"),
+					Values: []string{state},
 				})
 			}
 
