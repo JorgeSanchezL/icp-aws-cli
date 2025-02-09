@@ -24,7 +24,7 @@ func InitCommands(clients *awsclient.AWSClientCollection) {
 	RootCmd.AddCommand(ec2.InitCommands(clients.EC2))
 	RootCmd.AddCommand(dynamodb.InitCommands(clients.DynamoDB))
 	RootCmd.AddCommand(rds.InitCommands(clients.RDS))
-	RootCmd.AddCommand(cloudwatch.InitCommands(clients.CloudWatch))
+	RootCmd.AddCommand(cloudwatch.InitCommands(clients.CloudWatch, clients.CloudWatchLogs))
 	RootCmd.AddCommand(autoscaling.InitCommands(clients.AutoScaling))
 }
 
