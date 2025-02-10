@@ -1,4 +1,4 @@
-# README - High-Level Scripts for AWS CLI
+# High-Level Scripts for AWS CLI
 
 ## Description
 This project provides a set of high-level scripts to facilitate interaction with Amazon Web Services (AWS) through the command line. The scripts allow performing common cloud infrastructure management tasks without needing to use the AWS web console. Available functionalities include managing EC2 instances, RDS and DynamoDB databases, S3 storage, Auto Scaling and CloudWatch.
@@ -62,13 +62,13 @@ Below is a guide on how to use the scripts to manage AWS services:
 
 4. **Build the project:**
    ```sh
-   go build -o aws-cli-tool
+   go build -o icp-aws-cli
    ```
 
 5. **Execute commands:**
    ```sh
-   ./aws-cli-tool s3 list
-   ./aws-cli-tool ec2 list --all
+   ./icp-aws-cli s3 list
+   ./icp-aws-cli ec2 list --all
    ```
 
 ## References
