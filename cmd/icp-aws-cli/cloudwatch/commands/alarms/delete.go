@@ -21,8 +21,8 @@ func InitDeleteAlarmCommand(cwClient *cloudwatch.Client, cloudWatchCmd *cobra.Co
 	var allAlarms bool
 
 	var deleteAlarmCmd = &cobra.Command{
-		Use:   "delete-alarm",
-		Short: "Deletes a CloudWatch alarm",
+		Use:   "delete-alarms",
+		Short: "Deletes CloudWatch alarms",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if allAlarms && (alarmName != "" || prefix != "" || pattern != "" || tagKey != "" || tagValue != "") {
 				return fmt.Errorf("the --all flag cannot be combined with other filters")

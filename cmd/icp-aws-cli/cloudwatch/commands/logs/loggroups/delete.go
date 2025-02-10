@@ -20,8 +20,8 @@ func InitDeleteLogGroupCommand(cwLogsClient *cloudwatchlogs.Client, cloudWatchCm
 	var allLogGroups bool
 
 	var deleteLogGroupCmd = &cobra.Command{
-		Use:   "delete-loggroup",
-		Short: "Deletes a CloudWatch log group",
+		Use:   "delete-loggroups",
+		Short: "Deletes CloudWatch log groups",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if allLogGroups && (logGroupName != "" || prefix != "" || pattern != "" || tagKey != "" || tagValue != "") {
 				return fmt.Errorf("the --all flag cannot be combined with other filters")

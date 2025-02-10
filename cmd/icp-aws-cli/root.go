@@ -16,7 +16,7 @@ import (
 var RootCmd = &cobra.Command{
 	Use:   "icp-aws-cli",
 	Short: "CLI to interact with AWS",
-	Long:  "A CLI in Go to manage AWS resources like EC2, S3, DynamoDB, AutoScaling, RDS, and CloudWatch.",
+	Long:  "A CLI in Go to manage AWS resources from EC2, S3, DynamoDB, AutoScaling, RDS and CloudWatch.",
 }
 
 func InitCommands(clients *awsclient.AWSClientCollection) {

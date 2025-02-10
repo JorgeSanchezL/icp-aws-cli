@@ -21,8 +21,8 @@ func InitDeleteMetricCommand(cwClient *cloudwatch.Client, cloudWatchCmd *cobra.C
 	var allMetrics bool
 
 	var deleteMetricCmd = &cobra.Command{
-		Use:   "delete-metric",
-		Short: "Deletes a CloudWatch metric",
+		Use:   "delete-metrics",
+		Short: "Deletes CloudWatch metrics",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if allMetrics && (metricName != "" || prefix != "" || pattern != "" || namespace != "" || dimensionName != "" || dimensionValue != "") {
 				return fmt.Errorf("the --all flag cannot be combined with other filters")
